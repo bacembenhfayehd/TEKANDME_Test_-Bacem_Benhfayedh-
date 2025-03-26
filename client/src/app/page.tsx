@@ -145,7 +145,7 @@ export default function TaskManager() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-8">Task Manager</h1>
+      <h1 className="text-4xl font-bold text-center mb-8">Hello , Aqeel , Start planning today</h1>
 
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         {/* Left sidebar - Calendar always visible */}
@@ -175,8 +175,8 @@ export default function TaskManager() {
                 onChange={(e) => setNewTaskDetails(e.target.value)}
                 className="md:w-2/3 border-0"
               />
-              <Button onClick={addTask} variant="default" className="border-0">
-                Add Task
+              <Button onClick={addTask} variant="default" className="border-0 bg-green-600">
+                +
               </Button>
             </div>
           </div>
