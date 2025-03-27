@@ -1,5 +1,6 @@
 import path from "path";
 import dotenv from "dotenv";
+import cors from 'cors'
 //import { v2 as cloudinary } from "cloudinary";
 dotenv.config();
 
@@ -19,6 +20,12 @@ import connectMDB from "./db/connect.js";
 import cookieParser from "cookie-parser";
 
 const app = express();
+app.use(cors({
+  origin: 'http://localhost:3000', 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 const __dirname = path.resolve();
 const PORT = process.env.PORT || 5000;
 console.log(process.env.MONGO_URI);
