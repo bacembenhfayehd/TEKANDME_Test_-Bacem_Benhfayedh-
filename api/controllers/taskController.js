@@ -173,7 +173,7 @@ export const updateTask = async (req, res) => {
   } catch (error) {
     console.error("error:", error);
 
-    // Gestion des erreurs de validation Mongoose
+    
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
