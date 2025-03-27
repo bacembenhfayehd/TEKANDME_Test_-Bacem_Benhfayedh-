@@ -100,4 +100,30 @@ export const taskService = {
       }
     }
   },
+  updateTaskStatus: async (
+    taskId: string,
+    status: Task["status"]
+  ): Promise<Task> => {
+    try {
+      const response = await axios.patch(
+        `${BASE_URL}/status/${taskId}`,
+        { status },
+        {
+          withCredentials: true,
+        }
+      );
+
+      return response.data.task;
+    } catch (error: any) {
+      console.error("Error updating task status:", error);
+
+      if (error.response) {
+        throw new Error(error.response.data.message || "impossible to update");
+      } else if (error.request) {
+        throw new Error("no response from server");
+      } else {
+        throw new Error("error request configuration");
+      }
+    }
+  },
 };

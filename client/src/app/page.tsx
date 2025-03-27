@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, isTomorrow, differenceInDays } from "date-fns";
 import {
   Search,
   Trash2,
@@ -109,11 +109,22 @@ export default function TaskManager() {
 
   const updateTaskStatus = async (id: string, status: Task["status"]) => {
     try {
-      setTasks(
-        tasks.map((task) => (task._id === id ? { ...task, status } : task))
-      );
-    } catch (err) {
-      console.error("Error updating status", err);
+      const validStatuses: Task["status"][] = [
+        "To Do",
+        "In Progress",
+        "Completed",
+      ];
+      if (!validStatuses.includes(status)) {
+        throw new Error("Statut invalide");
+      }
+
+      const updatedTask = await taskService.updateTaskStatus(id, status);
+
+      setTasks(tasks.map((task) => (task._id === id ? updatedTask : task)));
+    } catch (err: any) {
+      console.error("Erreur lors de la mise à jour du statut", err);
+
+      setError(err.message || "Impossible de mettre à jour le statut");
     }
   };
 
@@ -162,9 +173,9 @@ export default function TaskManager() {
   const getPriorityColor = (priority: Task["priority"]) => {
     switch (priority) {
       case "High":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100  text-red-800";
       case "Medium":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100  text-orange-800";
       case "Low":
         return "bg-green-100 text-green-800";
     }
@@ -294,9 +305,8 @@ export default function TaskManager() {
             <div className="h-[calc(100vh-500px)] overflow-y-auto pr-2">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 {filteredTasks.map((task) => (
-                  <Card key={task._id} className="h-full border-0">
+                  <Card key={task._id} className="h-full bg-amber-200 border-0">
                     <div className="flex h-full">
-                      {/* Left column - Task details */}
                       <div className="flex-1 p-4">
                         <CardHeader className="p-0 pb-2">
                           <CardTitle className="text-lg">
@@ -314,7 +324,21 @@ export default function TaskManager() {
                             </div>
                             <div>
                               <p className="font-semibold">End Date:</p>
-                              <p>{format(task.dueDate, "MMM d, yyyy")}</p>
+                              <p
+                                className={`
+      ${isTomorrow(task.dueDate) ? "text-red-500 font-bold" : ""}
+    `}
+                              >
+                                {format(task.dueDate, "MMM d, yyyy")}
+                                {isTomorrow(task.dueDate) && (
+                                  <span
+                                    className="ml-2 px-2 py-1 bg-red-100 text-red-600 rounded-full text-[10px]"
+                                    title="Due Tomorrow!"
+                                  >
+                                    Tomorrow
+                                  </span>
+                                )}
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -405,25 +429,23 @@ export default function TaskManager() {
 
       <div className="bg-card rounded-lg p-4 shadow-sm mt-8 border-0">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="md:col-span-1 border-0">
+          <Card className="md:col-span-1 bg-amber-200 border-0">
             <CardContent className="flex flex-col items-center justify-center p-6">
               <p className="text-lg font-semibold mb-2">Completed Tasks</p>
-              <p className="text-4xl font-bold text-green-600">
-                {completedTasks}
-              </p>
+              <p className="text-4xl font-bold">{completedTasks}</p>
             </CardContent>
           </Card>
-          <Card className="md:col-span-1 border-0">
-            <CardContent className="flex flex-col items-center justify-center p-6">
-              <p className="text-lg font-semibold mb-2">In Progress</p>
-              <p className="text-4xl font-bold text-blue-600">
-                {inProgressTasks}
-              </p>
+          <Card className="md:col-span-1 bg-amber-300 border-0">
+            <CardContent className="  flex flex-col items-center justify-center p-6">
+              <p className="text-lg font-semibold mb-2">Pending tasks</p>
+              <p className="text-4xl font-bold ">{inProgressTasks}</p>
             </CardContent>
           </Card>
           <Card className="md:col-span-3 border-0">
-            <CardContent className="flex flex-col items-center justify-center p-6">
-              <p className="text-lg font-semibold mb-2">Total Tasks</p>
+            <CardContent className="flex gap-10  items-center justify-center p-6">
+              <p className="text-lg font-semibold mb-2 text-blue-300">
+                Tasks created
+              </p>
               <p className="text-4xl font-bold">{totalTasks}</p>
             </CardContent>
           </Card>

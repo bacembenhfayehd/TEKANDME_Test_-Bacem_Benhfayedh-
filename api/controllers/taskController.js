@@ -10,7 +10,7 @@ export const createTask = async (req, res) => {
     if (!title) {
       return {
         success: false,
-        message: "Le titre est obligatoire",
+        message: "title required",
       };
     }
 
@@ -20,21 +20,21 @@ export const createTask = async (req, res) => {
     if (due && due < start) {
       return {
         success: false,
-        message: "La date de fin doit être postérieure à la date de début",
+        message: "due date must be > start date",
       };
     }
 
     if (status && !["To Do", "In Progress", "Completed"].includes(status)) {
       return {
         success: false,
-        message: "Statut invalide",
+        message: "Status incorrect",
       };
     }
 
     if (priority && !["Low", "Medium", "High"].includes(priority)) {
       return {
         success: false,
-        message: "Priorité invalide",
+        message: "Priority incorrect",
       };
     }
 
@@ -53,10 +53,10 @@ export const createTask = async (req, res) => {
 
     res.status(201).json(savedTask);
   } catch (error) {
-    console.error("Erreur lors de la création de la tâche:", error);
+    console.error("Error:", error);
     return {
       success: false,
-      message: "Impossible de créer la tâche",
+      message: "sorry:/",
       error: error.message,
     };
   }
@@ -71,7 +71,7 @@ export const deleteTask = async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: "ID de tâche manquant",
+        message: "ID required",
       });
     }
 
@@ -80,7 +80,7 @@ export const deleteTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({
         success: false,
-        message: "Tâche non trouvée ou non autorisée",
+        message: "cannot find task",
       });
     }
 
@@ -88,15 +88,15 @@ export const deleteTask = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Tâche supprimée avec succès",
+      message: "deleted!",
       deletedTaskId: id,
     });
   } catch (error) {
-    console.error("Erreur lors de la suppression de la tâche:", error);
+    console.error("Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de supprimer la tâche",
+      message: "sorry",
       error: error.message,
     });
   }
@@ -111,7 +111,7 @@ export const updateTask = async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        message: "ID de tâche manquant",
+        message: "Id required",
       });
     }
 
@@ -120,7 +120,7 @@ export const updateTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({
         success: false,
-        message: "Tâche non trouvée ou non autorisée",
+        message: "cannot find task",
       });
     }
 
@@ -130,7 +130,7 @@ export const updateTask = async (req, res) => {
       if (title.trim() === "") {
         return res.status(400).json({
           success: false,
-          message: "Le titre ne peut pas être vide",
+          message: "title required",
         });
       }
       updateData.title = title;
@@ -153,7 +153,7 @@ export const updateTask = async (req, res) => {
         return res.status(400).json({
           success: false,
           message:
-            "La date de fin doit être postérieure ou égale à la date de début",
+            "due date > start date required",
         });
       }
 
@@ -199,14 +199,14 @@ export const getTasks = async (req, res) => {
     return res.status(200).json({
       success: true,
       tasks,
-      message: "Tâches récupérées avec succès",
+      message: "fetched",
     });
   } catch (error) {
-    console.error("Erreur lors de la récupération des tâches:", error);
+    console.error("Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de récupérer les tâches",
+      message: "sorry",
       error: error.message,
     });
   }
@@ -224,7 +224,7 @@ export const updateTaskPriority = async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Priorité invalide. Les valeurs acceptées sont : Low, Medium, High.",
+          "incorrect priority : Low, Medium, High.",
       });
     }
 
@@ -233,7 +233,7 @@ export const updateTaskPriority = async (req, res) => {
     if (!task) {
       return res.status(404).json({
         success: false,
-        message: "Tâche non trouvée ou non autorisée",
+        message: "cannot find task",
       });
     }
 
@@ -242,15 +242,59 @@ export const updateTaskPriority = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Priorité de la tâche mise à jour",
+      message: "updated",
       task,
     });
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la priorité :", error);
+    console.error("Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de mettre à jour la priorité",
+      message: "sorry",
+      error: error.message,
+    });
+  }
+};
+
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const { status } = req.body;
+
+    const validStatus = ["To Do", "In Progress", "Completed"];
+
+    if (!validStatus.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "wrong status. value accepted : To Do, In Progress, Completed.",
+      });
+    }
+
+    const task = await Task.findOne({ _id: id, user: userId });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "cannot find task or unauthorized",
+      });
+    }
+
+    task.status = status;
+    await task.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "updated",
+      task,
+    });
+  } catch (error) {
+    console.error("Error :", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "impossible to update",
       error: error.message,
     });
   }
@@ -265,29 +309,29 @@ export const filterTasksByStatus = async (req, res) => {
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Statut invalide",
+        message: "Status incorrect",
         validStatuses: validStatuses,
       });
     }
 
-    // Recherche des tâches avec le statut spécifié
+    
     const tasks = await Task.find({
       user: userId,
       status: status,
-    }).sort({ createdAt: -1 }); // Trier par date de création décroissante
+    }).sort({ createdAt: -1 }); 
 
     return res.status(200).json({
       success: true,
-      message: `Tâches filtrées par statut : ${status}`,
+      message: `filtred by status : ${status}`,
       tasks: tasks,
       count: tasks.length,
     });
   } catch (error) {
-    console.error("Erreur lors du filtrage des tâches:", error);
+    console.error("error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de filtrer les tâches",
+      message: "sorry :/",
       error: error.message,
     });
   }
@@ -307,24 +351,24 @@ export const filterTasksByPriority = async (req, res) => {
       });
     }
 
-    // Recherche des tâches avec le statut spécifié
+    
     const tasks = await Task.find({
       user: userId,
       priority: priority,
-    }).sort({ createdAt: -1 }); // Trier par date de création décroissante
+    }).sort({ createdAt: -1 }); 
 
     return res.status(200).json({
       success: true,
-      message: `Tâches filtrées par statut : ${priority}`,
+      message: `Task filtred by priority : ${priority}`,
       tasks: tasks,
       count: tasks.length,
     });
   } catch (error) {
-    console.error("Erreur lors du filtrage des tâches:", error);
+    console.error("Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de filtrer les tâches",
+      message: "sorry :/",
       error: error.message,
     });
   }
@@ -338,7 +382,7 @@ export const searchTasks = async (req, res) => {
     if (!query || query.trim() === "") {
       return res.status(400).json({
         success: false,
-        message: "Terme de recherche requis",
+        message: "need terms ",
       });
     }
 
@@ -352,16 +396,16 @@ export const searchTasks = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Recherche de tâches effectuée",
+      message: "searche ok",
       tasks: tasks,
       count: tasks.length,
     });
   } catch (error) {
-    console.error("Erreur lors de la recherche de tâches:", error);
+    console.error("Error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Impossible de rechercher les tâches",
+      message: "sorry",
       error: error.message,
     });
   }
